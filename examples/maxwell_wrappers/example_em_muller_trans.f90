@@ -1,20 +1,22 @@
-      implicit real *8 (a-h,o-z) 
+      implicit none
+      integer i,j,k
       real *8, allocatable :: srcvals(:,:),srccoefs(:,:)
+      real *8, allocatable :: srcvals_all(:,:),srcpos(:,:)
+      real *8, allocatable :: srccoefs_all(:,:)
       real *8, allocatable :: wts(:),rsigma(:)
       integer ipars(2)
 
+      integer npatches, npts, npts_all, nobj
       integer, allocatable :: norders(:),ixyzs(:),iptype(:)
 
       real *8 xyz_out(3),xyz_in(3)
       complex *16, allocatable :: sigma(:),rhs(:)
       complex *16, allocatable :: sigma2(:),rhs2(:)
-	  
 
-!      complex ( kind = 8 ), allocatable :: a_vect(:),RHS_vect(:)
       complex *16 vf(3)
 
-
       real *8, allocatable :: errs(:)
+      real *8 rres
       real *8 thet,phi
 	  complex * 16  zpars(5), omega, ep0,mu0,ep1,mu1
 
@@ -24,19 +26,26 @@
       integer ipatch_id
       real *8 uvs_targ(2)
 
+      integer ifinout
       logical isout0,isout1
 
       complex *16 pot,potex,ztmp,ima,zk
       complex *16 alpha_rhs
 
       integer count1
+      real *8 done
+      real *8 eps_quad_fmm, eps_gmres
+
+      real *8 t1, t2
+
+      real *8 pi
+      real *8 hkrand
 
       data ima/(0.0d0,1.0d0)/
 
-
       call prini(6,13)
 
-      done = 1
+      done = 1.0d0
       pi = atan(done)*4
 
 !
@@ -61,11 +70,9 @@
   
       write (*,*) 'omega: ',omega
       write (*,*) 'ep1: ',ep1
-
-
       
-      fname = '../../geometries/sphere_192_o03.go3'
-
+!      fname = '../../geometries/sphere_192_o03.go3'
+      fname = '../../geometries/y_coupler_o04_r00.go3'
 
       xyz_in(1) = 0.11d0
       xyz_in(2) = 0.0d-5
@@ -75,11 +82,8 @@
       xyz_out(2) = 3.1d0
       xyz_out(3) = 5.1d0
 
-!
-!	Open geometry
-!
+      nobj = 1
       call open_gov3_geometry_mem(fname,npatches,npts)
-
       call prinf('npatches=*',npatches,1)
       call prinf('npts=*',npts,1)
 
@@ -93,9 +97,12 @@
       allocate(sigma(4*npts),rhs(4*npts))
       ifinout = 1
 
-      thet = hkrand(0)*pi
-      phi = hkrand(0)*2*pi
-
+      call srand(0)
+      hkrand = rand()
+      thet = hkrand*pi
+      phi = hkrand*2*pi
+      write(*,'(a,e15.6)'), 'hkrand = ', hkrand
+      
 !
 !	Set the orientation of the Electric/Magnetic dipoles
 !
@@ -115,13 +122,13 @@
 !	Specify tolerance
 !
 
-      eps = 1d-4
+      eps_quad_fmm = 1d-4
       eps_gmres=1d-6
       call cpu_time(t1)
 !C$      t1 = omp_get_wtime()      
-      call em_muller_trans_solver(npatches,norders,ixyzs,iptype,npts,&
-     &srccoefs,srcvals,eps,zpars,numit,ifinout,rhs,eps_gmres,niter,errs,&
-     &rres,sigma)
+      call em_muller_trans_solver(npatches,norders,ixyzs,iptype,npts, &
+        srccoefs,srcvals,eps_quad_fmm,zpars,numit,ifinout,rhs, &
+        eps_gmres,niter,errs,rres,sigma)
 
       call prinf('niter=*',niter,1)
       call prin2('rres=*',rres,1)
@@ -135,14 +142,19 @@
 !       test solution at interior and exterior point
 !
 
-      call test_accuracy_em_muller_trans(eps,sigma,zpars,npts,wts,srcvals, &
-        xyz_in,vf,xyz_out)
+      call test_accuracy_em_muller_trans(eps_quad_fmm,sigma,zpars,npts,&
+        wts,srcvals,xyz_in,vf,xyz_out)
+      
+      allocate(srcvals_all(12,npts*nobj))
+      do j=1,npts
+        do k=1,12
+          srcvals_all(k,j) = srcvals(k,j)
+        enddo
+      enddo
+      call output_geometry(npts*nobj,srcvals_all)
 
       stop
       end
-
-
-
 
       subroutine setup_geom(igeomtype,norder,npatches,ipars,& 
      &srcvals,srccoefs,ifplot,fname)
@@ -313,6 +325,18 @@
       return
       end
 
+      subroutine output_geometry(npts_all,srcvals_all)
+        integer i,npts_all,unit_geo
+        real *8 srcvals_all(12,npts_all)
+        character *100 fname_geom
+        fname_geom = 'geometry.txt'
+        open(unit_geo, file=fname_geom, status='REPLACE')
+        do i=1,npts_all
+          write(unit_geo, '(e15.6,e15.6,e15.6)'), srcvals_all(1,i), &
+            srcvals_all(2,i), srcvals_all(3,i)
+        enddo
+        close(unit_geo)
+      end subroutine
    
 
 

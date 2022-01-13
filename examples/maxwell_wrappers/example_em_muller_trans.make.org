@@ -57,8 +57,6 @@ ifeq ($(HOST),intel-openmp)
     FFLAGS= -O3 -fPIC -march=native -qopenmp
 endif
 
--include make.inc
-
 FEND = -L${FMMBIE_INSTALL_DIR} $(LLINKLIB) -L${FMM_INSTALL_DIR} $(LFMMLINKLIB)
 #-L${FMM_INSTALL_DIR} $(LFMMLINKLIB)
 
