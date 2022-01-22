@@ -1,3 +1,13 @@
+# Summary:
+# This is a simple script to have a quick view of the objects whose boundary 
+# stores the boundary data for the Laplace's equation.
+#
+# How to run this scrpit:
+# After 'make -f lap_dir_ext_example_tori.make' produces the result,
+# 'python plot_geometry.py' on the terminal shows a figure for the objects.
+#
+# numpy and matplotlib are needed and can be installed by pip:
+# 'pip install numpy matplotlib'
 import os
 import sys
 import warnings
@@ -29,8 +39,6 @@ def main():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(x, y, z)
-#    ax.plot_trisurf(x, y, z, linewidth=0.2,antialiased=True)
-#    ax.plot_surface(x, y, z)
 
     lim_axes_min = min(min(x),min(y),min(z))
     lim_axes_max = max(max(x),max(y),max(z))

@@ -72,7 +72,7 @@
       write (*,*) 'ep1: ',ep1
       
 !      fname = '../../geometries/sphere_192_o03.go3'
-      fname = '../../geometries/y_coupler_o04_r00.go3'
+      fname = '../../geometries/y_coupler_o04_r01.go3'
 
       xyz_in(1) = 0.11d0
       xyz_in(2) = 0.0d-5

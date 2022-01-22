@@ -1,3 +1,15 @@
+! Summary:
+! This code is an example program to numerically solve an exterior boundary value problem
+! of Laplace's equation for which the boundary data is given on multiple tri-shaped objects
+! due to point forces inside the objects. 
+! The solution as the layer-potential representation is
+!   \alpha S[\sigma] + \beta D[\sigma]
+!   where S and D are single- and double-layer potentials respectively.
+!
+! How to run this code:
+! 'make -f lap_dir_ext_example_tori.make' on the terminal produces the result 
+! in the starndard output.
+
 program lap_dir_ext_example_tori
   implicit none
   integer i,j,k
@@ -28,7 +40,6 @@ program lap_dir_ext_example_tori
 
   call prini(6,13)
   pi = atan(1.0d0)*4
-! solution = \alpha S[\sigma] + \beta D[\sigma]
   dpars = 1.0d0 ! \alpha = \beta = 1
   ifinout = 1 ! exterior problem
   nobj = 4 ! # of objects
@@ -46,9 +57,9 @@ program lap_dir_ext_example_tori
 
   ndtarg = 3 ! space dimensions of target points
 !  ntarg = 1000 ! # of target popints
-  ntarg = 1 ! # of target popints
+  ntarg = 3 ! # of target popints
   norder = 6 ! heighest degree of Koornwinder expansion
-  npols = (norder+1)*(norder+2)/2 ! # of Koornwinder polynomials of degree < norder
+  npols = (norder+1)*(norder+2)/2 ! # of Koornwinder polynomials of degree
   npts = npatches*npols ! # of discretization points for each patch
   npts_all = npts*nobj ! total # of discretization points for all patches
   write(*,'(a,i0)'), '# of dicretization points = ', npts_all
@@ -88,8 +99,8 @@ program lap_dir_ext_example_tori
 
   ! set up geometric information & right hand side 
   ! passed to GMRES&FMM solver
-!  eps_fmm = 1.0d-6
-  eps_fmm = 1.0d-10
+  eps_fmm = 1.0d-6
+!  eps_fmm = 1.0d-10
   allocate(srcpos(3,npts),charge(nobj),rhs(npts_all))
   charge= 1.0d0
   do i=1,nobj
@@ -142,7 +153,7 @@ program lap_dir_ext_example_tori
   write(*,'(a,a,e15.6)'), 'L2 norm of relative errors in potentials ', &
     'at target points = ', l2errnorm_pot
 
-!!!!!!!!!!!!!!!!!!!!!!!!
+  ! info on point sources
   do i=1,npsrc 
     write(*,'(a,i0,a,e15.6,e15.6,e15.6)'), 'point source of object (', i, &
       ') = ', xyz_psrc(1,i), xyz_psrc(2,i), xyz_psrc(3,i)
@@ -151,7 +162,6 @@ program lap_dir_ext_example_tori
     write(*,'(a,i0,a,e15.6)'), 'pot(', i, ') = ', pot(i)
     write(*,'(a,i0,a,e15.6)'), 'potex(', i, ') = ', potex(i)
   enddo
-!!!!!!!!!!!!!!!!!!!!!!!!
 
   stop
 end
@@ -284,16 +294,16 @@ subroutine setup_targets(ntarg,targs)
   targs(2,1) = 0.0d0
   targs(3,1) = 0.0d0
 
-!  targs(1,2) = 0.0d0 
-!  targs(2,2) = 1.0d0
-!  targs(3,2) = 0.0d0
+  targs(1,2) = 0.0d0 
+  targs(2,2) = 1.0d0
+  targs(3,2) = 0.0d0
 
-!!  do i=3,ntarg
+  do i=3,ntarg
 !  do i=1,ntarg
-!    targs(1,i) = -15.0d0 + 30.0d0*real(i,8)/real(ntarg,8)
-!    targs(2,i) = 15.0d0
-!    targs(3,i) = 15.0d0
-!  enddo
+    targs(1,i) = -15.0d0 + 30.0d0*real(i,8)/real(ntarg,8)
+    targs(2,i) = 15.0d0
+    targs(3,i) = 15.0d0
+  enddo
 end subroutine
 
 subroutine setup_radii(nobj,radii)
@@ -350,19 +360,22 @@ subroutine setup_rotation(nobj,rotate)
   pi = atan(1.0d0)*4
 
   rotate(1,1) = 0.0d0
-  rotate(2,1) = pi*0.25d0
+!  rotate(2,1) = pi*0.25d0
+  rotate(2,1) = 0.0d0
   rotate(3,1) = 0.0d0
 
   rotate(1,2) = 0.0d0
   rotate(2,2) = 0.0d0
   rotate(3,2) = 0.0d0
 
-  rotate(1,3) = pi*0.25d0
+!  rotate(1,3) = pi*0.25d0
+  rotate(1,3) = 0.0d0
   rotate(2,3) = 0.0d0
   rotate(3,3) = 0.0d0
 
   rotate(1,4) = 0.0d0
-  rotate(2,4) = pi*0.5d0
+!  rotate(2,4) = pi*0.5d0
+  rotate(2,4) = 0.0d0
   rotate(3,4) = 0.0d0
 end subroutine
 
